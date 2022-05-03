@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 
 from api.models import TodoList, TodoItem
@@ -39,6 +39,16 @@ class TodoListViewSet(ModelViewSet):
     def perform_create(self, serializer):
         user = get_object_or_404(User, pk=self.request.user.id)
         serializer.save(owner=user)
+
+    @action(detail=True, methods=['post'])
+    def finish_list(self, request, pk=None):
+        instance = self.get_object()
+        items = TodoItem.objects.filter(list_id=instance)
+        for item in items:
+            item.status = 'FI'
+            item.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class TodoItemViewSet(ModelViewSet):
