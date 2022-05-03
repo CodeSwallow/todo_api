@@ -1,7 +1,16 @@
-from django.http import HttpResponse
+from rest_framework.viewsets import ModelViewSet
+
+from api.models import TodoList, TodoItem
+from api.serializers import TodoListSerializer, TodoItemSerializer
 
 # Create your views here.
 
 
-def main(request):
-    return HttpResponse('Hello')
+class TodoListViewSet(ModelViewSet):
+    queryset = TodoList.objects.all()
+    serializer_class = TodoListSerializer
+
+
+class TodoItemViewSet(ModelViewSet):
+    queryset = TodoItem.objects.all()
+    serializer_class = TodoItemSerializer
