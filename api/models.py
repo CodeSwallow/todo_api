@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
@@ -10,7 +11,6 @@ class TodoList(models.Model):
     name = models.CharField(max_length=255)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
-    last_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -28,11 +28,29 @@ class TodoList(models.Model):
         return 'Empty'
 
     @property
-    def duration(self):
+    def estimated_duration(self):
         items = self.items.all()
         durations = [item.duration for item in items]
         total = sum(durations, timedelta())
         return total
+
+    @property
+    def started(self):
+        items = self.items.all().order_by('started')
+        if items:
+            return items[0].started.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+        return None
+
+    @property
+    def finished(self):
+        items = self.items.all().order_by('-finished')
+        if items:
+            return items[0].finished.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+        return None
+
+    @property
+    def item_count(self):
+        return self.items.count()
 
 
 class TodoItem(models.Model):
@@ -60,7 +78,8 @@ class TodoItem(models.Model):
     )
     duration = models.DurationField(default=timedelta())
     date_created = models.DateTimeField(auto_now_add=True)
-    last_modified = models.DateTimeField(auto_now=True)
+    finished = models.DateTimeField(default=None, null=True)
+    started = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.name

@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
@@ -46,6 +47,7 @@ class TodoListViewSet(ModelViewSet):
         items = TodoItem.objects.filter(list_id=instance)
         for item in items:
             item.status = 'FI'
+            item.finished = timezone.now()
             item.save()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
