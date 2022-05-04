@@ -45,7 +45,9 @@ class TodoList(models.Model):
     def finished(self):
         items = self.items.all().order_by('-finished')
         if items:
-            return items[0].finished.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+            progress = {item.status for item in items}
+            if 'PE' not in progress:
+                return items[0].finished.astimezone().strftime("%Y-%m-%d %H:%M:%S")
         return None
 
     @property
