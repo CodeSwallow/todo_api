@@ -7,6 +7,7 @@ router = DefaultRouter()
 router.register(r'lists', TodoListViewSet, basename='list')
 router.register(r'items', TodoItemViewSet, basename='item')
 
+app_name = "api"
 urlpatterns = [
     path('user', user_view),
     path('', include(router.urls)),
