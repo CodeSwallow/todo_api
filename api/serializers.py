@@ -9,17 +9,23 @@ class TodoListSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     status = serializers.ReadOnlyField()
     estimated_duration = serializers.DurationField(read_only=True)
-    started = serializers.ReadOnlyField()
-    finished = serializers.ReadOnlyField()
+    started = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+    finished = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     item_count = serializers.ReadOnlyField()
 
     class Meta:
         model = TodoList
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super(TodoListSerializer, self).to_representation(instance)
+        representation['date_created'] = instance.date_created.astimezone().strftime("%Y-%m-%d %H:%M")
+        return representation
+
 
 class TodoItemSerializer(serializers.ModelSerializer):
     finished = serializers.ReadOnlyField()
+    date_created = serializers.ReadOnlyField()
 
     class Meta:
         model = TodoItem
@@ -29,6 +35,9 @@ class TodoItemSerializer(serializers.ModelSerializer):
         representation = super(TodoItemSerializer, self).to_representation(instance)
         representation['status'] = instance.get_status_display()
         representation['priority'] = instance.get_priority_display()
+        if instance.finished:
+            representation['finished'] = instance.finished.astimezone().strftime("%Y-%m-%d %H:%M")
+        representation['date_created'] = instance.date_created.astimezone().strftime("%Y-%m-%d %H:%M")
         return representation
 
     def update(self, instance, validated_data):
@@ -42,9 +51,16 @@ class TodoItemSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.priority = validated_data.get('priority', instance.priority)
         instance.duration = validated_data.get('duration', instance.duration)
-        instance.started = validated_data.get('started', instance.started)
         instance.save()
         return instance
+
+    def create(self, validated_data):
+        todo_item = TodoItem.objects.create(**validated_data)
+        finished = validated_data.get('status', None)
+        if finished == 'FI':
+            todo_item.finished = timezone.now()
+            todo_item.save()
+        return todo_item
 
 
 class UserSerializer(serializers.ModelSerializer):
