@@ -35,19 +35,12 @@ class TodoList(models.Model):
         return total
 
     @property
-    def started(self):
-        items = self.items.all().order_by('started')
-        if items:
-            return items[0].started.astimezone().strftime("%Y-%m-%d %H:%M:%S")
-        return None
-
-    @property
     def finished(self):
         items = self.items.all().order_by('-finished')
         if items:
             progress = {item.status for item in items}
             if 'PE' not in progress:
-                return items[0].finished.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+                return items[0].finished.astimezone().strftime("%Y-%m-%d %H:%M")
         return None
 
     @property
@@ -81,7 +74,6 @@ class TodoItem(models.Model):
     duration = models.DurationField(default=timedelta())
     date_created = models.DateTimeField(auto_now_add=True)
     finished = models.DateTimeField(default=None, null=True)
-    started = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.name
